@@ -1642,6 +1642,30 @@ function zvm_navigation_handler() {
   return $exit_code
 }
 
+# Check if the cursor is on the first terminal row of the current buffer.
+function zvm_is_on_first_visible_line() {
+  (( ${#${(%)PROMPT}} + CURSOR < COLUMNS ))
+}
+
+# Check if the cursor is on the last terminal row of the current buffer.
+function zvm_is_on_last_visible_line() {
+  local prompt_width=${#${(%)PROMPT}}
+  (( (prompt_width + CURSOR) / COLUMNS == (prompt_width + ${#BUFFER}) / COLUMNS ))
+}
+
+# Move up by one terminal row, like Vim's gk on wrapped lines.
+function zvm_vi_visible_up() {
+  (( CURSOR -= COLUMNS ))
+  (( CURSOR < 0 )) && CURSOR=0
+}
+
+# Move down by one terminal row, like Vim's gj on wrapped lines.
+function zvm_vi_visible_down() {
+  zvm_is_on_last_visible_line && return
+  (( CURSOR += COLUMNS ))
+  (( CURSOR > ${#BUFFER} )) && CURSOR=${#BUFFER}
+}
+
 # Handle a range of characters
 function zvm_range_handler() {
   local keys=$1
@@ -3749,6 +3773,8 @@ function zvm_init() {
   zvm_define_widget zvm_vi_opp_case
   zvm_define_widget zvm_vi_edit_command_line
   zvm_define_widget zvm_repeat_change
+  zvm_define_widget zvm_vi_visible_up
+  zvm_define_widget zvm_vi_visible_down
   zvm_define_widget zvm_switch_keyword
   zvm_define_widget zvm_paste_clipboard_after
   zvm_define_widget zvm_paste_clipboard_before
@@ -3805,6 +3831,10 @@ function zvm_init() {
   zvm_bindkey vicmd  'v' zvm_enter_visual_mode
   zvm_bindkey vicmd  'V' zvm_enter_visual_mode
   zvm_bindkey visual 'o' zvm_exchange_point_and_mark
+  zvm_bindkey vicmd  'gk' zvm_vi_visible_up
+  zvm_bindkey vicmd  'gj' zvm_vi_visible_down
+  zvm_bindkey visual 'gk' zvm_vi_visible_up
+  zvm_bindkey visual 'gj' zvm_vi_visible_down
   zvm_bindkey vicmd  'o' zvm_open_line_below
   zvm_bindkey vicmd  'O' zvm_open_line_above
   zvm_bindkey vicmd  'r' zvm_vi_replace_chars
@@ -4036,4 +4066,3 @@ case $ZVM_INIT_MODE in
   sourcing) zvm_init;;
   *) precmd_functions+=(zvm_init);;
 esac
-
