@@ -1655,14 +1655,14 @@ function zvm_is_on_last_visible_line() {
 
 # Move up by one terminal row, like Vim's gk on wrapped lines.
 function zvm_vi_visible_up() {
-  (( CURSOR -= COLUMNS ))
+  (( CURSOR -= ${NUMERIC:-1} * COLUMNS ))
   (( CURSOR < 0 )) && CURSOR=0
 }
 
 # Move down by one terminal row, like Vim's gj on wrapped lines.
 function zvm_vi_visible_down() {
   zvm_is_on_last_visible_line && return
-  (( CURSOR += COLUMNS ))
+  (( CURSOR += ${NUMERIC:-1} * COLUMNS ))
   (( CURSOR > ${#BUFFER} )) && CURSOR=${#BUFFER}
 }
 
